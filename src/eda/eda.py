@@ -1,3 +1,4 @@
+import ipaddress
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler, LabelEncoder
@@ -85,9 +86,14 @@ class FraudDataProcessor:
 
     @staticmethod
     def ip_to_int(ip):
-        """Convert IP address to an integer."""
-        return int(ip.replace('.', ''))
-
+        """Convert IPv4 or IPv6 address to integer using the ipaddress module."""
+        try:
+            ip_obj = ipaddress.ip_address(ip)
+            return int(ip_obj)
+        except ValueError:
+            print(f"Invalid IP address: {ip}")
+            return None
+        
     def feature_engineering(self, df):
         """Feature engineering for Fraud Data."""
         # Transaction frequency and velocity
