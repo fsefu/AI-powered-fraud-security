@@ -113,3 +113,4 @@ node_modules/
 # Config files for environments
 .env
 mlruns
+tr.ipynb
