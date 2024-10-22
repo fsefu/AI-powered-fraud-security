@@ -9,7 +9,7 @@ import mlflow
 import mlflow.sklearn
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Conv1D, MaxPooling1D, Flatten, LSTM, RNN
+from tensorflow.keras.layers import Dense, Conv1D, MaxPooling1D, Flatten, LSTM
 from tensorflow.keras.optimizers import Adam
 
 class FraudDetectionModel:
@@ -28,15 +28,37 @@ class FraudDetectionModel:
             "MLP": MLPClassifier()
         }
         mlflow.set_experiment(experiment_name)
-    
+
+    def preprocess_data(self):
+        """
+        Preprocess the data by converting date-time and categorical variables to numeric.
+        """
+        # Convert date-time columns to datetime objects and extract features (year, month, day, hour, etc.)
+        for col in self.df.select_dtypes(include=['object']):
+            try:
+                self.df[col] = pd.to_datetime(self.df[col])
+                self.df[col + '_year'] = self.df[col].dt.year
+                self.df[col + '_month'] = self.df[col].dt.month
+                self.df[col + '_day'] = self.df[col].dt.day
+                self.df[col + '_hour'] = self.df[col].dt.hour
+                self.df.drop(col, axis=1, inplace=True)
+            except (ValueError, TypeError):
+                # If it cannot be converted to datetime, it may be categorical
+                self.df[col] = self.df[col].astype('category').cat.codes  # Convert categorical to numerical
+
+        # Handle missing values if necessary
+        self.df.fillna(0, inplace=True)  # You can adjust this strategy as needed
+
     def prepare_data(self, test_size=0.2, random_state=42):
         """
         Prepare data by separating features and target, and performing train-test split.
         """
+        self.preprocess_data()  # Ensure data is preprocessed before splitting
+
         X = self.df.drop(self.target_column, axis=1)
         y = self.df[self.target_column]
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
-    
+
     def train_classical_models(self):
         """
         Train classical machine learning models.
