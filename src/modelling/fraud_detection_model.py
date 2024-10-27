@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -55,8 +56,14 @@ class FraudDetectionModel:
         """
         self.preprocess_data()  # Ensure data is preprocessed before splitting
 
+        # Drop the target column and separate features (X) and target (y)
         X = self.df.drop(self.target_column, axis=1)
         y = self.df[self.target_column]
+        
+        # Capture feature names before splitting
+        self.feature_names = X.columns.tolist()
+
+        # Perform train-test split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
 
     def train_classical_models(self):
@@ -68,7 +75,11 @@ class FraudDetectionModel:
             with mlflow.start_run(run_name=model_name):
                 model.fit(self.X_train, self.y_train)
                 y_pred = model.predict(self.X_test)
-                
+                            # Saving the trained model
+                model_filename = f'../model/{model_name}_fraud_detection_model.pkl'
+                joblib.dump(model, model_filename)
+                print(f"{model_name} saved successfully as {model_filename}.")
+
                 accuracy = accuracy_score(self.y_test, y_pred)
                 precision = precision_score(self.y_test, y_pred)
                 recall = recall_score(self.y_test, y_pred)
@@ -122,6 +133,10 @@ class FraudDetectionModel:
             
             loss, accuracy = model.evaluate(X_test_reshaped, self.y_test)
             
+            # Saving the deep learning model
+            model_filename = f'../model/{model_name}_fraud_detection_model.h5'
+            model.save(model_filename)
+            print(f"{model_name} saved successfully as {model_filename}.")
             # Logging metrics to MLflow
             mlflow.log_param("model_name", model_name)
             mlflow.log_metric("Loss", loss)

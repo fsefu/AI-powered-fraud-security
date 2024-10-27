@@ -114,3 +114,4 @@ node_modules/
 .env
 mlruns
 tr.ipynb
+model
