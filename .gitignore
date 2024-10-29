@@ -114,3 +114,6 @@ node_modules/
 .env
 mlruns
 tr.ipynb
+saved_models
+*.pkl
+*.h5
